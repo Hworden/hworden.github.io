@@ -1,0 +1,13 @@
+.navbar-brand > img {
+  width: 151px;
+}
+
+.footer__widget_logo > img {
+  width: 200px;
+}
+
+@media (max-width: 991px) {
+  .navbar .navbar-brand img {
+      max-width: 151px;
+  }
+}
