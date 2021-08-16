@@ -81,7 +81,7 @@ August 14, 2021
 </span>
 <span class=reading-time>
 <i class="fa fa-clock-o" aria-hidden=true></i>
-2-minute read
+3-minute read
 </span>
 </div>
 <div class=tags>
@@ -120,6 +120,12 @@ How it works
 <i class="fa fa-link" aria-hidden=true></i>
 </a>
 </h1>
+<h2 id=summary>
+Summary
+<a class=heading-link href=#summary>
+<i class="fa fa-link" aria-hidden=true></i>
+</a>
+</h2>
 <p>The main components to the solution are:</p>
 <ul>
 <li>Github Actions that run after a commit is pushed</li>
@@ -128,6 +134,46 @@ How it works
 <li>Using tweepy and API tokens and secrets to interact with the Twitter API.</li>
 </ul>
 <p>The greatest thing about this solution is that it doesn&rsquo;t cost me anything!</p>
+<h2 id=github-actions>
+Github Actions
+<a class=heading-link href=#github-actions>
+<i class="fa fa-link" aria-hidden=true></i>
+</a>
+</h2>
+<p>I already utilize Github Actions to automatically build and publish my private site source code to my public Github pages repository. After that, I added the following steps
+to first checkout the public repository. I&rsquo;m using a depth of 2 to later get the older index file.</p>
+<div class=highlight><pre tabindex=0 style=color:#586e75;background-color:#eee8d5;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#268bd2;font-weight:700>name</span>: <span style=color:#2aa198>Checkout for RSS</span>
+<span style=color:#268bd2;font-weight:700>uses</span>: <span style=color:#2aa198>actions/checkout@v2</span>
+<span style=color:#268bd2;font-weight:700>with</span>:
+    <span style=color:#268bd2;font-weight:700>repository</span>: <span style=color:#2aa198>hworden/hworden.github.io</span>
+    <span style=color:#268bd2;font-weight:700>fetch-depth</span>: <span style=color:#2aa198;font-weight:700>2</span>
+    <span style=color:#268bd2;font-weight:700>path</span>: <span style=color:#2aa198>hugo_site</span></code></pre></div>
+<p>I then ensure that python is installed on the Github action worker by including the next step.
+<div class=highlight><pre tabindex=0 style=color:#586e75;background-color:#eee8d5;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#268bd2;font-weight:700>name</span>: <span style=color:#2aa198>Setup Python</span>
+<span style=color:#268bd2;font-weight:700>uses</span>: <span style=color:#2aa198>actions/setup-python@v2</span>
+<span style=color:#268bd2;font-weight:700>with</span>:
+    <span style=color:#268bd2;font-weight:700>python-version</span>: <span style=color:#2aa198>&#39;2.7&#39;</span></code></pre></div></p>
+<p>Lastly, I run this fairly complicated script in the run step.
+<div class=highlight><pre tabindex=0 style=color:#586e75;background-color:#eee8d5;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#268bd2;font-weight:700>name</span>: <span style=color:#2aa198>Echo</span>
+<span style=color:#268bd2;font-weight:700>run</span>: |<span style=color:#2aa198>
+</span><span style=color:#2aa198>    cd hugo_site
+</span><span style=color:#2aa198>    cp index.xml ../website-poster/index1.xml
+</span><span style=color:#2aa198>    git checkout gh-pages~1
+</span><span style=color:#2aa198>    cp index.xml ../website-poster/index2.xml
+</span><span style=color:#2aa198>    cd ../website-poster
+</span><span style=color:#2aa198>    pip install -r requirements.txt
+</span><span style=color:#2aa198>    python tweeter.py --v --send-tweets --consumer-key ${{ secrets.TWITTER_CONSUMER_KEY }} --consumer-secret-key ${{ secrets.TWITTER_CONSUMER_SECRET_KEY }} --access-token ${{ secrets.TWITTER_ACCESS_TOKEN }} --access-token-secret ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }} index2.xml index1.xml</span>    </code></pre></div></p>
+<p>This last one is complicated&mldr; I basically use git to get (no pun intended) the index.xml file from the HEAD of that repo and the commit preceding it. I then just copy them somewhere where I can get access to them.</p>
+<p>Next I navigate to my <em>website-poster</em> directory. This is a submodule that I&rsquo;ve included in my git repo that contains my <code>tweeter.py</code> script.</p>
+<p>The script takes:</p>
+<ul>
+<li>Twitter App Consumer Key + Twitter App Consumer Secret Key</li>
+<li>Twitter Access Token + Twitter Access Token Secret</li>
+<li>the two <code>index.xml</code> files</li>
+</ul>
+<p>The secrets are all managed by Github&rsquo;s Secret Management and are not hardcoded into the script.
+Internally, the script diffs them and then uses <code>tweepy</code> to make a status update.
+The script itself could be the topic of it&rsquo;s own post&mldr; (let me know on Twitter if you&rsquo;d like more info!).</p>
 <h1 id=conclusion>
 Conclusion
 <a class=heading-link href=#conclusion>
